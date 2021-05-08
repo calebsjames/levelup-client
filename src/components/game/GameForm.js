@@ -1,12 +1,13 @@
 import React, { useContext, useState, useEffect } from "react"
 import { GameContext } from "./GameProvider.js"
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 
 
 export const GameForm = () => {
     
     const history = useHistory()
-    const { createGame, getGameTypes, gameTypes } = useContext(GameContext)
+    const { gameId } = useParams()
+    const { getGameById, editGame, createGame, getGameTypes, gameTypes } = useContext(GameContext)
     
 
     /*
@@ -15,23 +16,28 @@ export const GameForm = () => {
         provide some default values.
     */
     const [currentGame, setCurrentGame] = useState({
-        skillLevel: 1,
-        numberOfPlayers: 0,
+        skill_level: "",
+        number_of_players: "",
         title: "",
         maker: "",
         gameTypeId: 0
     })
+
 
     /*
         Get game types on initialization so that the <select>
         element presents game type choices to the user.
     */
 
-    const [isLoading, setIsLoading] = useState(true)
     
     useEffect(() => {        
         getGameTypes()
-        .then(() => setIsLoading(false))
+        .then(() => {
+            if(gameId) {
+                getGameById(gameId)
+                .then(setCurrentGame)
+            }
+        })
     }, [])
 
     /*
@@ -58,13 +64,13 @@ export const GameForm = () => {
 
     const changeGamePlayersState = (event) => {
         const newGameState = { ...currentGame }
-        newGameState.numberOfPlayers = event.target.value
+        newGameState.number_of_players = event.target.value
         setCurrentGame(newGameState)
     }
 
     const changeGameSkillLevelState = (event) => {
         const newGameState = { ...currentGame }
-        newGameState.skillLevel = event.target.value
+        newGameState.skill_level = event.target.value
         setCurrentGame(newGameState)
     }
 
@@ -74,9 +80,7 @@ export const GameForm = () => {
         setCurrentGame(newGameState)
     }
     /* REFACTOR CHALLENGE END */
-    if(isLoading){
-        return(<div>loading...</div>)
-    }
+    
     return (
         <form className="gameForm">
             <h2 className="gameForm__title">Register New Game</h2>
@@ -137,19 +141,37 @@ export const GameForm = () => {
                     // Prevent form from being submitted
                     evt.preventDefault()
 
-                    const game = {
-                        maker: currentGame.maker,
-                        title: currentGame.title,
-                        numberOfPlayers: parseInt(currentGame.numberOfPlayers),
-                        skillLevel: parseInt(currentGame.skillLevel),
-                        gameTypeId: parseInt(currentGame.gameTypeId)
-                    }
-
+                    
                     // Send POST request to your API
+                    if(gameId) {
+                        console.log("!", currentGame)
+                        const game = {
+                            id: parseInt(gameId),
+                            maker: currentGame.maker,
+                            title: currentGame.title,
+                            number_of_players: parseInt(currentGame.number_of_players),
+                            skill_level: parseInt(currentGame.skill_level),
+                            gameTypeId: parseInt(currentGame?.gameTypeId)
+                        }
+                        editGame(game)
+                        .then(() => history.push("/"))
+                    
                     createGame(game)
                         .then(() => history.push("/games"))
-                }}
-                className="btn btn-primary">Create</button>
+                    } else {
+                        const game = {
+                            maker: currentGame.maker,
+                            title: currentGame.title,
+                            number_of_players: parseInt(currentGame.number_of_players),
+                            skill_level: parseInt(currentGame.skill_level),
+                            gameTypeId: parseInt(currentGame.gameTypeId)
+                        }
+                        createGame(game)
+                        .then(() => history.push("/games"))
+                    }
+                    }}
+                    className="btn btn-primary">{gameId?"Edit":"Create"}</button>
         </form>
     )
 }
+                
