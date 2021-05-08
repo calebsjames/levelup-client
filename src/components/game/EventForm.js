@@ -67,6 +67,7 @@ export const EventForm = () => {
             <fieldset>
                 <div className="form-group">
                     <label htmlFor="date">Date: </label>
+                    {/* <input type="date/time" name="date" id="date" required className="form-control" */}
                     <input type="text" name="date" id="date" required className="form-control"
                         value={currentEvent.date}
                         onChange={changeEventState}
